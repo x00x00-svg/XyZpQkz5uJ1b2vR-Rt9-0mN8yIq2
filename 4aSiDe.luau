@@ -1,4 +1,4 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/asldsaldle12/as22121/refs/heads/main/freewarning.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/x00x00-svg/XyZpQkz5uJ1b2vR-Rt9-0mN8yIq2/refs/heads/main/freewarning.luau"))()
 if game.PlaceId == 13436905139 then
 	print('')
 else
