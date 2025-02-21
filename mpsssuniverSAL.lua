@@ -184,7 +184,11 @@ local function f_2()
     f_0("Configured spoofing for leg size. Fake size: " .. tostring(v_10) .. ", Real size: " .. tostring(v_9))
 end
 
-spawn(function()
+f_1()
+f_2()
+
+v_2.LocalPlayer.CharacterAdded:Connect(function(v)
+    spawn(function()
     while wait(0.1) do
         if not v_4["Right Leg"].Massless or not v_4["Left Leg"].Massless then
             v_4["Right Leg"].Massless = true
@@ -192,10 +196,6 @@ spawn(function()
         end
     end
 end)
-f_1()
-f_2()
-
-v_2.LocalPlayer.CharacterAdded:Connect(function(v)
     v_4 = v
     task.wait(0.5)
     v_7 = 2
