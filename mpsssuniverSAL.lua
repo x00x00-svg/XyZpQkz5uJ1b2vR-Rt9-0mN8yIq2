@@ -12,9 +12,12 @@ local d = a:CreateWindow({
 	MinimizeKey = Enum.KeyCode.LeftControl
 })
 local e = {
-	f = d:AddTab({ Title = "Main", Icon = "" }),
+	f = d:AddTab({ Title = "Main", Icon = "folder" }),
+	theme = d:AddTab({ Title = "Theme", Icon = "palette" }),
+	ot = d:AddTab({ Title = "fun", Icon = "aperture" }),
+	h = d:AddTab({ Title = "Bypass", Icon = "hammer" }),
 	g = d:AddTab({ Title = "Settings", Icon = "settings" }),
-	h = d:AddTab({ Title = "Bypass", Icon = "settings" })
+	ff = d:AddTab({ Title = "firetouchinterest", Icon = "flame" }),
 }
 
 b:SetLibrary(a)
@@ -23,11 +26,138 @@ b:IgnoreThemeSettings()
 b:SetIgnoreIndexes({})
 c:SetFolder("SPJREACH")
 b:SetFolder("SPJREACH/config")
-c:BuildInterfaceSection(e.g)
+c:BuildInterfaceSection(e.theme)
 b:BuildConfigSection(e.g)
 d:SelectTab(1)
 a:Notify({ Title = "SPJ Reach", Content = "The script has been loaded.", Duration = 8 })
 b:LoadAutoloadConfig()
+
+local player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+local reach = 50 
+local reachEnabled = true
+local touchint = {}
+local balls = {}
+local lastRefreshTime = os.time()
+local reachCircle = nil
+local colorreach = Color3.fromRGB(96, 205, 255)
+local toggleautoballs = false
+local function getballs()
+	if not toggleautoballs then return end
+	local char = player.Character or player.CharacterAdded:Wait()
+    local parts = {}
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(char) then
+            table.insert(parts, part)
+        end
+    end
+    return parts
+end
+local function refreshBalls(force)
+    if not force and lastRefreshTime + 1.5 > os.time() then return end
+    table.clear(touchint)
+    local character = player.Character
+    if character then
+        for _, v in pairs(character:GetDescendants()) do
+            if v.Name == "TouchInterest" and v.Parent:IsA("BasePart") then
+                table.insert(touchint, v)
+            end
+        end
+    end
+    lastRefreshTime = os.time()
+    table.clear(balls)
+        for _, v in pairs(Workspace:GetDescendants()) do
+            local firstLetter = string.sub(v.Name, 1, 1)
+			if v.Name == 'TPS' or
+			v.Name == "AIFA" or v.Name == "MRS" or v.Name == 'CSF' or v.Name == "PRS" or v.Name == "MPS" or v.Name == "VFA" or
+               v.Name == "fakeBallExploiter" or v.Name == "MPS" or v.Name == "VFA" or firstLetter == "{" then
+                task.wait()
+                table.insert(balls, v)
+            end
+        end
+	    if toggleautoballs then
+			local autoBalls = getballs()
+			if autoBalls then
+				for _, ball in pairs(autoBalls) do
+					table.insert(balls, ball)
+				end
+			end
+		end
+    end
+
+local function moveReachCircle(targetPosition)
+    if not reachEnabled or not reachCircle then return end
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local tweenGoal = {Position = targetPosition}
+    local tween = TweenService:Create(reachCircle, tweenInfo, tweenGoal)
+    tween:Play()
+end
+
+local function createReachCircle()
+    if not reachCircle then
+        reachCircle = Instance.new("Part")
+        reachCircle.Name = "ReachCircle"
+        reachCircle.Parent = Workspace
+        reachCircle.Shape = Enum.PartType.Ball
+        reachCircle.Size = Vector3.new(reach * 2, reach * 2, reach * 2)
+        reachCircle.Anchored = true
+        reachCircle.CanCollide = false
+        reachCircle.Transparency = 0.7
+        reachCircle.Material = Enum.Material.ForceField
+        reachCircle.Color = colorreach
+
+        RunService.RenderStepped:Connect(function()
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                moveReachCircle(character.HumanoidRootPart.Position)
+            end
+        end)
+    else
+        reachCircle.Size = Vector3.new(reach * 2, reach * 2, reach * 2)
+    end
+end
+
+createReachCircle()
+
+
+local reachSlider = e.ff:AddSlider("ReachSlider", {
+    Title = "Adjust Reach",
+    Description = "Set the reach distance (current: " .. reach .. ")",
+    Default = reach,
+    Min = 0,
+    Max = 100,
+    Rounding = 1,
+    Callback = function(Value)
+         reach = Value
+         createReachCircle()
+    end
+})
+
+
+local reachColorPicker = e.ff:AddColorpicker("ReachColor", {
+    Title = "Reach Circle Color",
+    Default = colorreach
+})
+reachColorPicker:OnChanged(function()
+    colorreach = reachColorPicker.Value
+    if reachCircle then
+        reachCircle.Color = colorreach
+    end
+end)
+local autoballtoggle = e.ff:AddToggle("Auto Balls", {
+	Title = "Auto Balls",
+	Description = "Automatically detect balls",
+	Default = toggleautoballs
+})
+autoballtoggle:OnChanged(function(Value)
+	toggleautoballs = Value
+end)
+
+
+
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/x00x00-svg/XyZpQkz5uJ1b2vR-Rt9-0mN8yIq2/refs/heads/main/freewarning.luau"))()
 
@@ -288,9 +418,6 @@ local x2 = e.h:AddButton({
 				return z2(a3, b3, ...)
 			end)
 			setreadonly(y2, true)
-			pcall(function()
-				game:GetService("ReplicatedStorage").Events.X:Destroy()
-			end)
 		end)
 		a:Notify({ Title = "SPJ Reach", Content = "Anti-Kick enabled.", Duration = 8 })
 	end
@@ -313,6 +440,56 @@ local z3 = e.h:AddButton({
 		end)
 	end
 })
+local z4 = e.h:AddButton({
+	Title = "Bypass TPS street soccer anti-cheat",
+	Callback = function()
+        while true do
+            for _, s in pairs(game:GetDescendants()) do
+                if s:IsA("Script") or s:IsA("LocalScript") then
+                    if tonumber(s.Name) and tonumber(s.Name) > 0 and tonumber(s.Name) <= 1000 then
+                        s:Destroy()
+                        print(tonumber(s.Name))
+                        break
+                    end
+                end
+            end
+            wait(1)
+        end
+        game:GetService("StarterPlayer").StarterCharacterScripts[" "]:Destroy()
+        a:Notify({ Title = "SPJ Reach", Content = "Bypassed TPS street soccer anti-cheat.", Duration = 8 })
+    end
+})
+local range = 20
+local force = 5000
+--[[
+e.ot:AddButton({
+    Title = "Super Shoot",
+    Description = "",
+    Callback = function()
+		local char = player.Character or player.CharacterAdded:Wait()
+         local rootPart = char:WaitForChild("HumanoidRootPart")
+		local function getNearbyUnanchoredParts()
+			local parts = {}
+			for _, part in pairs(workspace:GetDescendants()) do
+				if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(char) then
+					local dist = (part.Position - rootPart.Position).magnitude
+					if dist <= range then  -- Agora range é número, então a comparação funciona!
+						table.insert(parts, part)
+					end
+				end
+			end
+			return parts
+		end
+		
+		local unanchoredParts = getNearbyUnanchoredParts()
+		for _, part in pairs(unanchoredParts) do
+			local direction = (part.Position - rootPart.Position)
+			direction = Vector3.new(direction.X, 0, direction.Z).unit
+			part:ApplyImpulse(direction * force)
+		end
+	end
+})
+]]
 
 local function c4()
 	local d4 = mt.__index
@@ -361,9 +538,103 @@ local function c4()
 	end)
 	setreadonly(mt, true)
 end
+local sliderforconfigforce = e.ot:AddSlider("Force", {
+	Title = "Force",
+	Description = "Set the force of the super shoot",
+	Default = force,
+	Min = 0,
+	Max = 10000,
+	Rounding = 1,
+	Callback = function(Value)
+		force = Value
+	end
+})
+local sliderforconfigrange = e.ot:AddSlider("Range", {
+	Title = "Range",
+	Description = "Set the range of the super shoot",
+	Default = range,
+	Min = 0,
+	Max = 100,
+	Rounding = 1,
+	Callback = function(Value)
+		range = Value
+	end
+})
+e.ot:AddButton({
+    Title = "Super Shoot",
+    Description = "",
+    Callback = function()
 
+        local char = player.Character or player.CharacterAdded:Wait()
+        local rootPart = char:WaitForChild("HumanoidRootPart")
+
+        local function getNearbyUnanchoredParts()
+            local parts = {}
+            for _, part in pairs(workspace:GetDescendants()) do
+                if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(char) then
+                    local dist = (part.Position - rootPart.Position).magnitude
+                    if dist <= range then
+                        table.insert(parts, part)
+                    end
+                end
+            end
+            return parts
+        end
+
+        local unanchoredParts = getNearbyUnanchoredParts()
+        for _, part in pairs(unanchoredParts) do
+            local direction = (part.Position - rootPart.Position)
+            direction = Vector3.new(direction.X, 0, direction.Z).unit
+
+            part:ApplyImpulse(direction * force)
+        end
+    end
+})
+local function ballhigh(part)
+	return part:ApplyImpulse(Vector3.new(0, 5000, 0))
+end
+e.ot:AddButton({
+	Title = "Ball High",
+	Description = "make the ball go very high (make sure u have ball ownership)",
+	Callback = function()
+		local char = player.Character or player.CharacterAdded:Wait()
+        local rootPart = char:WaitForChild("HumanoidRootPart")
+        local function getNearbyUnanchoredParts()
+            local parts = {}
+            for _, part in pairs(workspace:GetDescendants()) do
+                if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(char) then
+                    local dist = (part.Position - rootPart.Position).magnitude
+                    if dist <= range then
+                        table.insert(parts, part)
+                    end
+                end
+            end
+            return parts
+        end
+		for _, part in pairs(getNearbyUnanchoredParts()) do
+			ballhigh(part)
+		end
+	end
+})
 c4()
 
+UserInputService.InputBegan:Connect(function(i, gameProcessedEvent)
+    refreshBalls(false)
+    for i,e in pairs(balls) do
+if (e.Position - player.Character["Right Leg"].Position).magnitude <= reach then
+        task.wait()
+        for i,v in pairs(touchint) do
+	if v.Parent == player.Character["Head"] then
+		continue
+	end
+        task.spawn(function()
+        firetouchinterest(e,v.Parent,0)
+        firetouchinterest(e,v.Parent,1)
+        end)
+        end
+end
+end
+end)
 g1.LocalPlayer.CharacterAdded:Connect(function(i4)
 	i1 = i4
 	task.wait(0.5)
