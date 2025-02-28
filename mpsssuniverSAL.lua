@@ -461,35 +461,6 @@ local z4 = e.h:AddButton({
 })
 local range = 20
 local force = 5000
---[[
-e.ot:AddButton({
-    Title = "Super Shoot",
-    Description = "",
-    Callback = function()
-		local char = player.Character or player.CharacterAdded:Wait()
-         local rootPart = char:WaitForChild("HumanoidRootPart")
-		local function getNearbyUnanchoredParts()
-			local parts = {}
-			for _, part in pairs(workspace:GetDescendants()) do
-				if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(char) then
-					local dist = (part.Position - rootPart.Position).magnitude
-					if dist <= range then  -- Agora range é número, então a comparação funciona!
-						table.insert(parts, part)
-					end
-				end
-			end
-			return parts
-		end
-		
-		local unanchoredParts = getNearbyUnanchoredParts()
-		for _, part in pairs(unanchoredParts) do
-			local direction = (part.Position - rootPart.Position)
-			direction = Vector3.new(direction.X, 0, direction.Z).unit
-			part:ApplyImpulse(direction * force)
-		end
-	end
-})
-]]
 
 local function c4()
 	local d4 = mt.__index
