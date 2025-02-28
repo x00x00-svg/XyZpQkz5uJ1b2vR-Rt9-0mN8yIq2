@@ -461,6 +461,35 @@ local z4 = e.h:AddButton({
 })
 local range = 20
 local force = 5000
+--[[
+e.ot:AddButton({
+    Title = "Super Shoot",
+    Description = "",
+    Callback = function()
+		local char = player.Character or player.CharacterAdded:Wait()
+         local rootPart = char:WaitForChild("HumanoidRootPart")
+		local function getNearbyUnanchoredParts()
+			local parts = {}
+			for _, part in pairs(workspace:GetDescendants()) do
+				if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(char) then
+					local dist = (part.Position - rootPart.Position).magnitude
+					if dist <= range then  -- Agora range é número, então a comparação funciona!
+						table.insert(parts, part)
+					end
+				end
+			end
+			return parts
+		end
+		
+		local unanchoredParts = getNearbyUnanchoredParts()
+		for _, part in pairs(unanchoredParts) do
+			local direction = (part.Position - rootPart.Position)
+			direction = Vector3.new(direction.X, 0, direction.Z).unit
+			part:ApplyImpulse(direction * force)
+		end
+	end
+})
+]]
 
 local function c4()
 	local d4 = mt.__index
@@ -517,7 +546,7 @@ local sliderforconfigforce = e.ot:AddSlider("Force", {
 	Max = 10000,
 	Rounding = 1,
 	Callback = function(Value)
-		force = Value
+		force = tonumber(Value)
 	end
 })
 local sliderforconfigrange = e.ot:AddSlider("Range", {
@@ -528,12 +557,12 @@ local sliderforconfigrange = e.ot:AddSlider("Range", {
 	Max = 100,
 	Rounding = 1,
 	Callback = function(Value)
-		range = Value
+		range = tonumber(Value)
 	end
 })
 e.ot:AddButton({
     Title = "Super Shoot",
-    Description = "",
+    Description = "make a super shoot (make sure u have ownership)",
     Callback = function()
 
         local char = player.Character or player.CharacterAdded:Wait()
@@ -562,50 +591,67 @@ e.ot:AddButton({
     end
 })
 local function ballhigh(part)
-	return part:ApplyImpulse(Vector3.new(0, 5000, 0))
+    local force = Instance.new("BodyVelocity", part)
+    force.Velocity = Vector3.new(0, 1e6, 0)
+    force.MaxForce = Vector3.new(1e6, 1e6, 1e6)
 end
-e.ot:AddButton({
-	Title = "Ball High",
-	Description = "make the ball go very high (make sure u have ball ownership)",
-	Callback = function()
-		local char = player.Character or player.CharacterAdded:Wait()
-        local rootPart = char:WaitForChild("HumanoidRootPart")
-        local function getNearbyUnanchoredParts()
-            local parts = {}
-            for _, part in pairs(workspace:GetDescendants()) do
-                if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(char) then
-                    local dist = (part.Position - rootPart.Position).magnitude
-                    if dist <= range then
-                        table.insert(parts, part)
-                    end
-                end
+
+local function voiddrop(part)
+    part.Position = Vector3.new(part.Position.X, -1e6, part.Position.Z)
+end
+local function spin(part)
+    local spin = Instance.new("BodyAngularVelocity", part)
+    spin.AngularVelocity = Vector3.new(0, 1e5, 0) 
+    spin.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+end
+
+local function getNearbyUnanchoredParts()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local rootPart = char:WaitForChild("HumanoidRootPart")
+    local parts = {}
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(char) then
+            local dist = (part.Position - rootPart.Position).magnitude
+            if dist <= range then
+                table.insert(parts, part)
             end
-            return parts
         end
-		for _, part in pairs(getNearbyUnanchoredParts()) do
-			ballhigh(part)
-		end
-	end
+    end
+    return parts
+end
+
+
+e.ot:AddButton({
+    Title = "Ball High",
+    Description = "make the ball go to very high (make sure u have ownership)",
+    Callback = function()
+        for _, part in pairs(getNearbyUnanchoredParts()) do
+            ballhigh(part)
+        end
+    end
+})
+
+
+e.ot:AddButton({
+    Title = "Void Drop",
+    Description = "make the ball go to void (make sure u have ownership)",
+    Callback = function()
+        for _, part in pairs(getNearbyUnanchoredParts()) do
+            voiddrop(part)
+        end
+    end
+})
+e.ot:AddButton({
+    Title = "Spin Mode",
+    Description = "spin the ball (make sure u have ownership)",
+    Callback = function()
+        for _, part in pairs(getNearbyUnanchoredParts()) do
+            spin(part)
+        end
+    end
 })
 c4()
 
-UserInputService.InputBegan:Connect(function(i, gameProcessedEvent)
-    refreshBalls(false)
-    for i,e in pairs(balls) do
-if (e.Position - player.Character["Right Leg"].Position).magnitude <= reach then
-        task.wait()
-        for i,v in pairs(touchint) do
-	if v.Parent == player.Character["Head"] then
-		continue
-	end
-        task.spawn(function()
-        firetouchinterest(e,v.Parent,0)
-        firetouchinterest(e,v.Parent,1)
-        end)
-        end
-end
-end
-end)
 g1.LocalPlayer.CharacterAdded:Connect(function(i4)
 	i1 = i4
 	task.wait(0.5)
@@ -623,4 +669,32 @@ g1.LocalPlayer.CharacterAdded:Connect(function(i4)
 	z1 = 2
 	a2 = 1
 	c4()
+end)
+UserInputService.InputBegan:Connect(function(i, gameProcessedEvent)
+    if i.KeyCode == Enum.KeyCode.W or i.KeyCode == Enum.KeyCode.A or i.KeyCode == Enum.KeyCode.S or i.KeyCode == Enum.KeyCode.D or i.KeyCode == Enum.KeyCode.Space then
+        return
+    end
+    if gameProcessedEvent == false then
+        if currentleg == true then
+            currentleg = false
+        else
+            currentleg = true
+        end
+    end
+    refreshBalls(true)
+    for i, e in pairs(balls) do
+        local distance = (e.Position - player.Character["Right Leg"].Position).Magnitude
+        if tonumber(distance) <= tonumber(reach) then
+            task.wait()
+            for i, v in pairs(touchint) do
+                if v.Parent == player.Character["Head"] then
+                    continue
+                end
+                task.spawn(function()
+                    firetouchinterest(e, v.Parent, 0)
+                    firetouchinterest(e, v.Parent, 1)
+                end)
+            end
+        end
+    end
 end)
